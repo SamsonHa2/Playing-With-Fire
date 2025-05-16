@@ -8,9 +8,10 @@ data class Player(
     val isAlive: Boolean = true,
     val bombCount: Int = 1,
     val fireRange: Int = 1,
-    val speed: Float = 0.5f
+    val speed: Float = 2f,
+    var direction: Direction = Direction.NONE
 ){
-    fun move(delta: Double, direction: Direction) {
+    fun move(delta: Double) {
         val dx = when (direction) {
             Direction.LEFT -> -1f
             Direction.RIGHT -> 1f

@@ -43,7 +43,7 @@ class GameViewModel @Inject constructor(): ViewModel () {
 
         // Step 2: Process them
         for (event in eventsToProcess) {
-            handleEvent(event, delta)
+            handleEvent(event)
         }
 
         // Step 3: Advance game state
@@ -57,13 +57,13 @@ class GameViewModel @Inject constructor(): ViewModel () {
     }
 
 
-    private fun handleEvent(event: GameEvent, delta: Double) {
+    private fun handleEvent(event: GameEvent) {
         when (event){
             GameEvent.OnBombClick -> placeBomb()
-            GameEvent.OnDownClick -> game.movePlayer(delta, game.getPlayers()[0], Direction.DOWN)
-            GameEvent.OnLeftClick -> game.movePlayer(delta, game.getPlayers()[0], Direction.LEFT)
-            GameEvent.OnRightClick -> game.movePlayer(delta, game.getPlayers()[0], Direction.RIGHT)
-            GameEvent.OnUpClick -> game.movePlayer(delta, game.getPlayers()[0], Direction.UP)
+            GameEvent.OnDownClick -> game.getPlayers()[0].direction = Direction.DOWN
+            GameEvent.OnLeftClick -> game.getPlayers()[0].direction = Direction.LEFT
+            GameEvent.OnRightClick -> game.getPlayers()[0].direction = Direction.RIGHT
+            GameEvent.OnUpClick -> game.getPlayers()[0].direction = Direction.UP
         }
     }
 

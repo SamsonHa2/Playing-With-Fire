@@ -37,6 +37,14 @@ class Game {
     fun update(delta: Double) {
         updateBombs(delta)
         updateExplosions(delta)
+        updatePlayers(delta)
+    }
+
+    private fun updatePlayers(delta: Double) {
+        for (player in players){
+            movePlayer(delta, player.value)
+            player.value.direction = Direction.NONE
+        }
     }
 
     private fun updateBombs(delta: Double) {
@@ -63,17 +71,18 @@ class Game {
         }
     }
 
-    fun movePlayer(delta: Double, player: Player, direction: Direction) {
-        val collision = checkCollision(delta, player, direction)
+    private fun movePlayer(delta: Double, player: Player) {
+        val collision = checkCollision(delta, player)
         if (!collision){
-            player.move(delta, direction)
+            player.move(delta)
         }
-
     }
 
-    private fun checkCollision(delta: Double, player: Player, direction: Direction): Boolean {
-        val updated = player.copy().apply { move(delta, direction) }
+    private fun checkCollision(delta: Double, player: Player): Boolean {
+        val updated = player.copy().apply { move(delta) }
         val playerRadius = player.size / 2
+        val direction = player.direction
+
         val targetX = when (direction) {
             Direction.LEFT  -> (updated.position.x - playerRadius).toInt()
             Direction.RIGHT -> (updated.position.x + playerRadius).toInt()
