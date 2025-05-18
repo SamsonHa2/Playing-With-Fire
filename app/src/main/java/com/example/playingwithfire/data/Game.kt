@@ -104,6 +104,11 @@ class Game {
         if (tile.type == TileType.Empty && tile2.type == TileType.Empty) {
             Log.d("GameEvent", "Player moved $direction from ${player.position.x}, ${player.position.y} to ${updated.position.x}, ${updated.position.y} = no collision")
             updatePlayer(player.id, updated)
+
+            val explosionPositions = explosions.flatMap { it.affectedPositions }
+            if (explosionPositions.contains(tile.position) || explosionPositions.contains(tile2.position)){
+                Log.d("GameEvent", "Player stepped in explosion")
+            }
             return false
         } else {
             Log.d("GameEvent", "Player blocked $direction")
