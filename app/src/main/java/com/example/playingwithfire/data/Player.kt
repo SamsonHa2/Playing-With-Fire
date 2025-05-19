@@ -6,9 +6,9 @@ data class Player(
     var position: Position,
     val size: Float = 0.9f,
     val isAlive: Boolean = true,
-    val bombCount: Int = 1,
-    val fireRange: Int = 1,
-    val speed: Float = 2f,
+    var bombCount: Int = 1,
+    var fireRange: Int = 1,
+    var speed: Float = 2f,
     var direction: Direction = Direction.NONE
 ){
     fun move(delta: Double) {

@@ -13,6 +13,8 @@ class Game {
     private val players = mutableMapOf<String, Player>()
     private val bombs = mutableListOf<Bomb>()
     private val explosions = mutableListOf<Explosion>()
+    private val powerUps = mutableListOf<PowerUp>()
+
     init {
         spawnPlayer("101231965", "Samson Ha", Position(1.5f,1.5f))
     }
@@ -103,12 +105,22 @@ class Game {
 
         if (tile.type == TileType.Empty && tile2.type == TileType.Empty) {
             Log.d("GameEvent", "Player moved $direction from ${player.position.x}, ${player.position.y} to ${updated.position.x}, ${updated.position.y} = no collision")
-            updatePlayer(player.id, updated)
-
             val explosionPositions = explosions.flatMap { it.affectedPositions }
             if (explosionPositions.contains(tile.position) || explosionPositions.contains(tile2.position)){
                 Log.d("GameEvent", "Player stepped in explosion")
             }
+            val powerUp = powerUps.find { it.position == tile.position || it.position == tile2.position }
+
+            if (powerUp != null) {
+                Log.d("GameEvent", "Player collected power-up: ${powerUp.type}")
+                when (powerUp.type){
+                    PowerUpType.FireRange -> updated.fireRange += 1
+                    PowerUpType.ExtraBomb -> updated.bombCount += 1
+                    PowerUpType.Speed -> updated.speed *= 1.5f
+                }
+                powerUps.remove(powerUp)
+            }
+            updatePlayer(player.id, updated)
             return false
         } else {
             Log.d("GameEvent", "Player blocked $direction")
@@ -173,15 +185,29 @@ class Game {
 
                 if (tile.type == TileType.BreakableWall) {
                     tile.type = TileType.Empty
+                    spawnPowerUp(tile.position)
                     break
                 }
             }
         }
 
+        getPlayers()[0].bombCount += 1
         return Explosion(
             affectedPositions = affected
         )
     }
+
+    private fun spawnPowerUp(position: Position){
+        val powerUpTypes = PowerUpType.entries.toTypedArray()
+        if ((1..3).random() == 1) { //33% chance to spawn a power up
+            powerUps.add(PowerUp(
+                powerUpTypes[(0..2).random()], //random power up type
+                position
+            ))
+        }
+    }
+
+    fun getPowerUps(): List<PowerUp> = powerUps.toList()
 
     fun getExplosions(): List<Explosion> = explosions.toList()
 

@@ -44,6 +44,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.playingwithfire.data.Bomb
 import com.example.playingwithfire.data.Explosion
 import com.example.playingwithfire.data.Player
+import com.example.playingwithfire.data.PowerUp
+import com.example.playingwithfire.data.PowerUpType
 import com.example.playingwithfire.data.TileType
 import com.example.playingwithfire.util.UiEvent
 import kotlinx.coroutines.delay
@@ -59,6 +61,7 @@ fun GameScreen(
     val players by viewModel.players.collectAsState()
     val bombs by viewModel.bombs.collectAsState()
     val explosions by viewModel.explosions.collectAsState()
+    val powerUps by viewModel.powerUps.collectAsState()
 
     LaunchedEffect(true) {
         viewModel.uiEvent.collectLatest { event ->
@@ -145,6 +148,14 @@ fun GameScreen(
                 tileSize
             )
 
+
+            for (powerUp in powerUps){
+                PowerUpSprite(
+                    powerUp,
+                    tileSize
+                )
+            }
+
             for (explosion in explosions){
                 ExplosionSprite(
                     explosion,
@@ -166,6 +177,32 @@ fun GameScreen(
             )
         }
     }
+}
+
+@Composable
+fun PowerUpSprite(powerUp: PowerUp, size: Dp) {
+    val color = when (powerUp.type) {
+        PowerUpType.Speed -> Color.White
+        PowerUpType.FireRange -> Color.Magenta
+        PowerUpType.ExtraBomb -> Color.Cyan
+    }
+    val density = LocalDensity.current.density
+
+    // Calculate power up size and ensure it's even
+    val sizePx = size.value * density
+    val adjustedSizePx = (sizePx / 2).roundToInt() * 2
+    val powerUpSize = (adjustedSizePx / density).dp
+
+    Box(
+        modifier = Modifier
+            .size(size)
+            .offset(
+                x = size * powerUp.position.x - powerUpSize / 2,
+                y = size * powerUp.position.y - powerUpSize / 2
+            )
+            .background(color),
+
+    )
 }
 
 @Composable

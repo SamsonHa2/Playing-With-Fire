@@ -7,6 +7,7 @@ import com.example.playingwithfire.data.Explosion
 import com.example.playingwithfire.data.Game
 import com.example.playingwithfire.data.GameGrid
 import com.example.playingwithfire.data.Player
+import com.example.playingwithfire.data.PowerUp
 import com.example.playingwithfire.util.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -29,6 +30,8 @@ class GameViewModel @Inject constructor(): ViewModel () {
     val bombs: StateFlow<List<Bomb>> = _bombs
     private val _explosions = MutableStateFlow(game.getExplosions())
     val explosions: StateFlow<List<Explosion>> = _explosions
+    private val _powerUps = MutableStateFlow(game.getPowerUps())
+    val powerUps: StateFlow<List<PowerUp>> = _powerUps
 
     private val eventQueue = mutableListOf<GameEvent>()
     private val queueLock = Any()
@@ -53,6 +56,7 @@ class GameViewModel @Inject constructor(): ViewModel () {
         _players.value = game.getPlayers()
         _bombs.value = game.getBombs()
         _explosions.value = game.getExplosions()
+        _powerUps.value = game.getPowerUps()
         _grid.value = game.grid
     }
 
@@ -75,6 +79,9 @@ class GameViewModel @Inject constructor(): ViewModel () {
 
     private fun placeBomb() {
         val player = game.getPlayers()[0]
-        game.spawnBomb(player.position, player.fireRange)
+        if (player.bombCount > 0) {
+            player.bombCount -= 1
+            game.spawnBomb(player.position, player.fireRange)
+        }
     }
 }
