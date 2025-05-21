@@ -1,6 +1,7 @@
 package com.example.playingwithfire.data
 
 import android.util.Log
+import kotlin.math.min
 
 class Game {
     val grid: GameGrid = generateGameGrid(
@@ -74,10 +75,8 @@ class Game {
     }
 
     private fun movePlayer(delta: Double, player: Player) {
-        val collision = checkCollision(delta, player)
-        if (!collision){
-            player.move(delta)
-        }
+        checkCollision(delta, player)
+        player.move(delta)
     }
 
     private fun checkCollision(delta: Double, player: Player): Boolean {
@@ -104,30 +103,53 @@ class Game {
         val tile2 = grid[diaTargetX, diaTargetY]
 
         if (tile.type == TileType.Empty && tile2.type == TileType.Empty) {
-            Log.d("GameEvent", "Player moved $direction from ${player.position.x}, ${player.position.y} to ${updated.position.x}, ${updated.position.y} = no collision")
+            if (direction!=Direction.NONE) {
+                Log.d(
+                    "GameEvent",
+                    "Player moved $direction from ${player.position.x}, ${player.position.y} to ${updated.position.x}, ${updated.position.y} = no collision"
+                )
+                Log.d("event", "t1 ${tile.position}, t2 ${tile2.position}")
+            }
             val explosionPositions = explosions.flatMap { it.affectedPositions }
             if (explosionPositions.contains(tile.position) || explosionPositions.contains(tile2.position)){
                 Log.d("GameEvent", "Player stepped in explosion")
             }
             val powerUp = powerUps.find { it.position == tile.position || it.position == tile2.position }
-
+            updatePlayer(player.id, updated)
             if (powerUp != null) {
                 Log.d("GameEvent", "Player collected power-up: ${powerUp.type}")
                 when (powerUp.type){
                     PowerUpType.FireRange -> updated.fireRange += 1
                     PowerUpType.ExtraBomb -> updated.bombCount += 1
-                    PowerUpType.Speed -> updated.speed *= 1.5f
+                    PowerUpType.Speed -> updated.speed = min( updated.speed * 1.5f, 25.0f)
                 }
                 powerUps.remove(powerUp)
             }
-            updatePlayer(player.id, updated)
             return false
         } else {
-            Log.d("GameEvent", "Player blocked $direction")
+            val curPosition = grid[player.position.x.toInt(), player.position.y.toInt()].position
+            updated.position = resetBlockedPosition(curPosition, direction, player.position, playerRadius)
+            if (direction!=Direction.NONE) {
+                Log.d(
+                    "GameEvent",
+                    "Player blocked $direction, from ${player.position.x}, ${player.position.y} to ${updated.position.x}, ${updated.position.y}"
+                )
+                Log.d("event", "t1 ${tile.position}, t2 ${tile2.position}")
+            }
         }
+        updatePlayer(player.id, updated)
         return true
     }
 
+    private fun resetBlockedPosition(tilePosition: Position, direction: Direction, playerPosition: Position, playerRad: Float): Position {
+        return when (direction){
+            Direction.UP -> Position(playerPosition.x, tilePosition.y - 0.5f + playerRad + 0.01f)
+            Direction.DOWN -> Position(playerPosition.x, tilePosition.y + 0.5f - playerRad - 0.01f)
+            Direction.LEFT -> Position(tilePosition.x - 0.5f + playerRad + 0.01f, playerPosition.y)
+            Direction.RIGHT -> Position(tilePosition.x + 0.5f - playerRad - 0.01f, playerPosition.y)
+            Direction.NONE -> playerPosition
+        }
+    }
 
     private fun getOccupiedTile(value: Float, playerRadius: Float): Int {
         return when {
