@@ -31,7 +31,7 @@ class Game {
         )
     }
 
-    fun updatePlayer(id: String, updated: Player) {
+    private fun updatePlayer(id: String, updated: Player) {
         if (players.containsKey(id)) {
             players[id] = updated
         }
@@ -44,9 +44,38 @@ class Game {
     }
 
     private fun updatePlayers(delta: Double) {
-        for (player in players){
-            movePlayer(delta, player.value)
-            player.value.direction = Direction.NONE
+        for ((id, player) in players) {
+            val movedPlayer = player.copy().apply { move(delta) }
+            val playerRadius = player.size / 2
+            val direction = player.direction
+
+            val targetX = when (direction) {
+                Direction.LEFT  -> (movedPlayer.position.x - playerRadius).toInt()
+                Direction.RIGHT -> (movedPlayer.position.x + playerRadius).toInt()
+                else            -> movedPlayer.position.x.toInt()
+            }
+
+            val targetY = when (direction) {
+                Direction.UP    -> (movedPlayer.position.y - playerRadius).toInt()
+                Direction.DOWN  -> (movedPlayer.position.y + playerRadius).toInt()
+                else            -> movedPlayer.position.y.toInt()
+            }
+
+            val diaTargetX = getOccupiedTile(movedPlayer.position.x, playerRadius)
+            val diaTargetY = getOccupiedTile(movedPlayer.position.y, playerRadius)
+
+            val mainTile = grid[targetX, targetY]
+            val diaTile = grid[diaTargetX, diaTargetY]
+
+            if (willCollide(mainTile, diaTile)) {
+                val tilePos = grid[player.position.x.toInt(), player.position.y.toInt()].position
+                movedPlayer.position = resetBlockedPosition(tilePos, player.direction, player.position, player.size / 2)
+            }
+
+            handleExplosionCollision(movedPlayer, mainTile.position, diaTile.position)
+
+            val finalPlayer = collectPowerUp(movedPlayer, mainTile.position, diaTile.position).copy(direction = Direction.NONE)
+            updatePlayer(id, finalPlayer)
         }
     }
 
@@ -74,71 +103,30 @@ class Game {
         }
     }
 
-    private fun movePlayer(delta: Double, player: Player) {
-        checkCollision(delta, player)
-        player.move(delta)
+    private fun willCollide(mainTile: Tile, diaTile: Tile): Boolean {
+        return mainTile.type != TileType.Empty || diaTile.type != TileType.Empty
     }
 
-    private fun checkCollision(delta: Double, player: Player): Boolean {
-        val updated = player.copy().apply { move(delta) }
-        val playerRadius = player.size / 2
-        val direction = player.direction
-
-        val targetX = when (direction) {
-            Direction.LEFT  -> (updated.position.x - playerRadius).toInt()
-            Direction.RIGHT -> (updated.position.x + playerRadius).toInt()
-            else            -> updated.position.x.toInt()
+    private fun handleExplosionCollision(player: Player, mainTilePos: Position, diaTilePos: Position): Player{
+        val explosionPositions = explosions.flatMap { it.affectedPositions }
+        if (explosionPositions.contains(mainTilePos) || explosionPositions.contains(diaTilePos)){
+            Log.d("GameEvent", "Player stepped in explosion")
         }
+        return player
+    }
 
-        val targetY = when (direction) {
-            Direction.UP    -> (updated.position.y - playerRadius).toInt()
-            Direction.DOWN  -> (updated.position.y + playerRadius).toInt()
-            else            -> updated.position.y.toInt()
+    private fun collectPowerUp(player: Player, mainTilePos: Position, diaTilePos: Position): Player{
+        val powerUp = powerUps.find { it.position == mainTilePos || it.position == diaTilePos }
+        if (powerUp != null) {
+            Log.d("GameEvent", "Player collected power-up: ${powerUp.type}")
+            when (powerUp.type){
+                PowerUpType.FireRange -> player.fireRange += 1
+                PowerUpType.ExtraBomb -> player.bombCount += 1
+                PowerUpType.Speed -> player.speed = min( player.speed * 1.5f, 25.0f)
+            }
+            powerUps.remove(powerUp)
         }
-
-        val diaTargetX = getOccupiedTile(updated.position.x, playerRadius)
-        val diaTargetY = getOccupiedTile(updated.position.y, playerRadius)
-
-        val tile = grid[targetX, targetY]
-        val tile2 = grid[diaTargetX, diaTargetY]
-
-        if (tile.type == TileType.Empty && tile2.type == TileType.Empty) {
-            if (direction!=Direction.NONE) {
-                Log.d(
-                    "GameEvent",
-                    "Player moved $direction from ${player.position.x}, ${player.position.y} to ${updated.position.x}, ${updated.position.y} = no collision"
-                )
-                Log.d("event", "t1 ${tile.position}, t2 ${tile2.position}")
-            }
-            val explosionPositions = explosions.flatMap { it.affectedPositions }
-            if (explosionPositions.contains(tile.position) || explosionPositions.contains(tile2.position)){
-                Log.d("GameEvent", "Player stepped in explosion")
-            }
-            val powerUp = powerUps.find { it.position == tile.position || it.position == tile2.position }
-            updatePlayer(player.id, updated)
-            if (powerUp != null) {
-                Log.d("GameEvent", "Player collected power-up: ${powerUp.type}")
-                when (powerUp.type){
-                    PowerUpType.FireRange -> updated.fireRange += 1
-                    PowerUpType.ExtraBomb -> updated.bombCount += 1
-                    PowerUpType.Speed -> updated.speed = min( updated.speed * 1.5f, 25.0f)
-                }
-                powerUps.remove(powerUp)
-            }
-            return false
-        } else {
-            val curPosition = grid[player.position.x.toInt(), player.position.y.toInt()].position
-            updated.position = resetBlockedPosition(curPosition, direction, player.position, playerRadius)
-            if (direction!=Direction.NONE) {
-                Log.d(
-                    "GameEvent",
-                    "Player blocked $direction, from ${player.position.x}, ${player.position.y} to ${updated.position.x}, ${updated.position.y}"
-                )
-                Log.d("event", "t1 ${tile.position}, t2 ${tile2.position}")
-            }
-        }
-        updatePlayer(player.id, updated)
-        return true
+        return player
     }
 
     private fun resetBlockedPosition(tilePosition: Position, direction: Direction, playerPosition: Position, playerRad: Float): Position {
