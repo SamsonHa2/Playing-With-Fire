@@ -143,11 +143,12 @@ fun GameScreen(
                 )
             }
 
-            PlayerSprite(
-                players[0],
-                tileSize
-            )
-
+            for (player in players){
+                PlayerSprite(
+                    player,
+                    tileSize
+                )
+            }
 
             for (powerUp in powerUps){
                 PowerUpSprite(

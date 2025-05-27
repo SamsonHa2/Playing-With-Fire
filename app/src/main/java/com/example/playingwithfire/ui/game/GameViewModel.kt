@@ -63,7 +63,7 @@ class GameViewModel @Inject constructor(): ViewModel () {
 
     private fun handleEvent(event: GameEvent) {
         when (event){
-            GameEvent.OnBombClick -> placeBomb()
+            GameEvent.OnBombClick -> game.placeBomb(game.getPlayers()[0])
             GameEvent.OnDownClick -> game.getPlayers()[0].direction = Direction.DOWN
             GameEvent.OnLeftClick -> game.getPlayers()[0].direction = Direction.LEFT
             GameEvent.OnRightClick -> game.getPlayers()[0].direction = Direction.RIGHT
@@ -74,14 +74,6 @@ class GameViewModel @Inject constructor(): ViewModel () {
     fun onEvent(event: GameEvent) {
         synchronized(queueLock) {
             eventQueue.add(event)
-        }
-    }
-
-    private fun placeBomb() {
-        val player = game.getPlayers()[0]
-        if (player.bombCount > 0) {
-            player.bombCount -= 1
-            game.spawnBomb(player.position, player.fireRange)
         }
     }
 }
