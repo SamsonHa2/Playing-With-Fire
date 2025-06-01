@@ -238,6 +238,7 @@ class Game {
 
         for ((_,player) in players){
             if (!player.bombs.contains(bomb)) continue
+            player.bombs.remove(bomb)
             player.bombCount += 1
         }
         return Explosion(

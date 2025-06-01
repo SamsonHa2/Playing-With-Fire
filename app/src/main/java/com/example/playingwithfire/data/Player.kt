@@ -4,7 +4,7 @@ data class Player(
     val id: String,
     val name: String,
     var position: Position,
-    var bombs: List<Bomb> = emptyList(),
+    var bombs: MutableList<Bomb> = ArrayList(),
     val size: Float = 0.9f,
     val isAlive: Boolean = true,
     var bombCount: Int = 1,
