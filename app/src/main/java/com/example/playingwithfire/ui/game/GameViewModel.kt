@@ -5,6 +5,7 @@ import com.example.playingwithfire.model.Bomb
 import com.example.playingwithfire.model.Direction
 import com.example.playingwithfire.model.Explosion
 import com.example.playingwithfire.domain.GameEngine
+import com.example.playingwithfire.model.GameState
 import com.example.playingwithfire.model.Grid
 import com.example.playingwithfire.model.Player
 import com.example.playingwithfire.model.PowerUp
@@ -22,17 +23,8 @@ class GameViewModel @Inject constructor(): ViewModel () {
     private val _uiEvent = Channel<UiEvent>()
     val uiEvent = _uiEvent. receiveAsFlow()
     val game: GameEngine = GameEngine()
-    private var gameState = game.getGameState()
-    private val _grid = MutableStateFlow(gameState.grid)
-    val grid: StateFlow<Grid> = _grid
-    private val _players = MutableStateFlow(gameState.players)
-    val players: StateFlow<List<Player>> = _players
-    private val _bombs = MutableStateFlow(gameState.bombs)
-    val bombs: StateFlow<List<Bomb>> = _bombs
-    private val _explosions = MutableStateFlow(gameState.explosions)
-    val explosions: StateFlow<List<Explosion>> = _explosions
-    private val _powerUps = MutableStateFlow(gameState.powerUps)
-    val powerUps: StateFlow<List<PowerUp>> = _powerUps
+    private var _gameState = MutableStateFlow(game.getGameState())
+    val gameState: StateFlow<GameState> = _gameState
 
     private val eventQueue = mutableListOf<GameEvent>()
     private val queueLock = Any()
@@ -52,14 +44,10 @@ class GameViewModel @Inject constructor(): ViewModel () {
 
         // Step 3: Advance game state
         game.update(delta)
-        gameState = game.getGameState()
+
 
         // Step 4: Refresh StateFlows
-        _players.value = gameState.players
-        _bombs.value = gameState.bombs
-        _explosions.value = gameState.explosions
-        _powerUps.value = gameState.powerUps
-        _grid.value = gameState.grid
+        _gameState.value = game.getGameState()
     }
 
 

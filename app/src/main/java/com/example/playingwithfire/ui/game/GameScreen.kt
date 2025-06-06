@@ -57,11 +57,13 @@ fun GameScreen(
     onNavigate: (UiEvent.Navigate) -> Unit,
     viewModel: GameViewModel = hiltViewModel()
 ) {
-    val grid by viewModel.grid.collectAsState()
-    val players by viewModel.players.collectAsState()
-    val bombs by viewModel.bombs.collectAsState()
-    val explosions by viewModel.explosions.collectAsState()
-    val powerUps by viewModel.powerUps.collectAsState()
+    val gameState by viewModel.gameState.collectAsState()
+
+    val grid = gameState.grid
+    val players = gameState.players
+    val bombs = gameState.bombs
+    val explosions = gameState.explosions
+    val powerUps = gameState.powerUps
 
     LaunchedEffect(true) {
         viewModel.uiEvent.collectLatest { event ->
