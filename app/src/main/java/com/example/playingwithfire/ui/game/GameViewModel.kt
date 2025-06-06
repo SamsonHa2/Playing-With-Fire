@@ -1,14 +1,10 @@
 package com.example.playingwithfire.ui.game
 
 import androidx.lifecycle.ViewModel
-import com.example.playingwithfire.model.Bomb
-import com.example.playingwithfire.model.Direction
-import com.example.playingwithfire.model.Explosion
 import com.example.playingwithfire.domain.GameEngine
+import com.example.playingwithfire.model.Direction
 import com.example.playingwithfire.model.GameState
-import com.example.playingwithfire.model.Grid
-import com.example.playingwithfire.model.Player
-import com.example.playingwithfire.model.PowerUp
+import com.example.playingwithfire.model.PlayerState
 import com.example.playingwithfire.util.UiEvent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -45,19 +41,20 @@ class GameViewModel @Inject constructor(): ViewModel () {
         // Step 3: Advance game state
         game.update(delta)
 
-
         // Step 4: Refresh StateFlows
         _gameState.value = game.getGameState()
     }
 
 
     private fun handleEvent(event: GameEvent) {
-        when (event){
-            GameEvent.OnBombClick -> game.placeBomb(game.getPlayers()[0])
-            GameEvent.OnDownClick -> game.getPlayers()[0].direction = Direction.DOWN
-            GameEvent.OnLeftClick -> game.getPlayers()[0].direction = Direction.LEFT
-            GameEvent.OnRightClick -> game.getPlayers()[0].direction = Direction.RIGHT
-            GameEvent.OnUpClick -> game.getPlayers()[0].direction = Direction.UP
+        val player = game.getPlayers().firstOrNull() ?: return
+        when (event) {
+            GameEvent.OnBombClick -> game.placeBomb(player)
+            GameEvent.OnDirectionRelease -> player.state = PlayerState.IDLE
+            GameEvent.OnDownClick -> game.setPlayerRunning(player, Direction.DOWN)
+            GameEvent.OnLeftClick -> game.setPlayerRunning(player, Direction.LEFT)
+            GameEvent.OnRightClick -> game.setPlayerRunning(player, Direction.RIGHT)
+            GameEvent.OnUpClick -> game.setPlayerRunning(player, Direction.UP)
         }
     }
 

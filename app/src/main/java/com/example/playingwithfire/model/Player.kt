@@ -12,8 +12,9 @@ data class Player(
     var bombCount: Int = 1,
     var fireRange: Int = 1,
     var speed: Float = 2f,
-    var direction: Direction = Direction.NONE,
-    var behavior: ChasePlayerBehavior = ChasePlayerBehavior()
+    var direction: Direction = Direction.LEFT,
+    var behavior: ChasePlayerBehavior = ChasePlayerBehavior(),
+    var state: PlayerState = PlayerState.IDLE
 ){
     fun move(delta: Double) {
         val dx = when (direction) {

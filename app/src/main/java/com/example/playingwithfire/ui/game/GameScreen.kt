@@ -26,9 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -346,27 +343,31 @@ fun ArrowButtonGrid(
     ) {
         ArrowButton(
             icon = Icons.Default.KeyboardArrowUp,
-            onRepeat = { viewModel.onEvent(GameEvent.OnUpClick) },
+            onPress = { viewModel.onEvent(GameEvent.OnUpClick) },
+            onRelease = { viewModel.onEvent(GameEvent.OnDirectionRelease) },
             size = size
         )
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             ArrowButton(
                 icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                onRepeat = { viewModel.onEvent(GameEvent.OnLeftClick) },
+                onPress = { viewModel.onEvent(GameEvent.OnLeftClick) },
+                onRelease = { viewModel.onEvent(GameEvent.OnDirectionRelease) },
                 size = size
             )
             Spacer(modifier = Modifier.size(size))
             ArrowButton(
                 icon = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                onRepeat = { viewModel.onEvent(GameEvent.OnRightClick) },
+                onPress = { viewModel.onEvent(GameEvent.OnRightClick) },
+                onRelease = { viewModel.onEvent(GameEvent.OnDirectionRelease) },
                 size = size
             )
         }
 
         ArrowButton(
             icon = Icons.Default.KeyboardArrowDown,
-            onRepeat = { viewModel.onEvent(GameEvent.OnDownClick) },
+            onPress = { viewModel.onEvent(GameEvent.OnDownClick) },
+            onRelease = { viewModel.onEvent(GameEvent.OnDirectionRelease) },
             size = size
         )
     }
@@ -376,20 +377,10 @@ fun ArrowButtonGrid(
 @Composable
 fun ArrowButton(
     icon: ImageVector,
-    onRepeat: () -> Unit,
+    onPress: () -> Unit,
+    onRelease: () -> Unit,
     size: Dp,
-    intervalMs: Long = 1L
 ) {
-    var isPressed by remember { mutableStateOf(false) }
-
-    // Launch a repeating coroutine when pressed
-    LaunchedEffect(isPressed) {
-        while (isPressed) {
-            onRepeat()
-            delay(intervalMs)
-        }
-    }
-
     Box(
         modifier = Modifier
             .size(size)
@@ -398,9 +389,9 @@ fun ArrowButton(
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
-                        isPressed = true
-                        tryAwaitRelease()
-                        isPressed = false
+                        onPress()
+                        awaitRelease()
+                        onRelease()
                     }
                 )
             },
@@ -409,7 +400,7 @@ fun ArrowButton(
         Icon(
             imageVector = icon,
             contentDescription = icon.name,
-            tint = Color.White
+            tint = Color.White,
         )
     }
 }

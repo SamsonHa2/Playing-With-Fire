@@ -26,10 +26,6 @@ class GameEngine {
             powerUps = powerUps.toList()
         )
     }
-    init {
-        spawnPlayer("Player 1", "Player 1", Position(1.5f,1.5f))
-        spawnPlayer("Bot 1", "Bot 1", Position(13.5f,11.5f))
-    }
 
     private fun spawnPlayer(id: String, name: String, position: Position) {
         if (players.containsKey(id)) return
@@ -58,15 +54,16 @@ class GameEngine {
         for ((id, player) in players) {
             if (id == "Bot 1"){
                 when (player.behavior.decideMove(player, getGameState())){
-                    Moves.MOVE_UP -> player.direction = Direction.UP
-                    Moves.MOVE_DOWN -> player.direction = Direction.DOWN
-                    Moves.MOVE_LEFT -> player.direction = Direction.LEFT
-                    Moves.MOVE_RIGHT -> player.direction = Direction.RIGHT
+                    Moves.MOVE_UP -> setPlayerRunning(player, Direction.UP)
+                    Moves.MOVE_DOWN -> setPlayerRunning(player, Direction.DOWN)
+                    Moves.MOVE_LEFT -> setPlayerRunning(player, Direction.LEFT)
+                    Moves.MOVE_RIGHT -> setPlayerRunning(player, Direction.RIGHT)
                     Moves.PLACE_BOMB -> placeBomb(player)
-                    Moves.DO_NOTHING -> player.direction = Direction.NONE
+                    Moves.DO_NOTHING -> player.state = PlayerState.IDLE
                     Moves.NO_CHANGE -> { /* do nothing */ }
                 }
             }
+            if (player.state == PlayerState.IDLE) continue
             val movedPlayer = player.copy().apply { move(delta) }
             val playerRadius = player.size / 2
             val direction = player.direction
@@ -96,13 +93,15 @@ class GameEngine {
 
             handleExplosionCollision(movedPlayer, mainTile.position, diaTile.position)
 
-            val finalPlayer = if (id == "Player 1"){
-                collectPowerUp(movedPlayer, mainTile.position, diaTile.position).copy(direction = Direction.NONE)
-            }  else {
-                collectPowerUp(movedPlayer, mainTile.position, diaTile.position).copy()
-            }
+            val finalPlayer = collectPowerUp(movedPlayer, mainTile.position, diaTile.position).copy()
+
             updatePlayer(id, finalPlayer)
         }
+    }
+
+    fun setPlayerRunning(player: Player, direction: Direction) {
+        player.direction = direction
+        player.state = PlayerState.RUNNING
     }
 
     fun placeBomb(player: Player) {
