@@ -1,6 +1,6 @@
-package com.example.playingwithfire.data
+package com.example.playingwithfire.model
 
-class GameGrid(val width: Int, val height: Int) {
+class Grid(val width: Int, val height: Int) {
     val tiles: Array<Array<Tile>> = Array(height) { y ->
         Array(width) { x ->
             Tile(position = Position(x+0.5f, y+0.5f))

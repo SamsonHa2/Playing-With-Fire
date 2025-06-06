@@ -1,4 +1,4 @@
-package com.example.playingwithfire.data
+package com.example.playingwithfire.model
 
 data class Explosion(
     val affectedPositions: List<Position>,

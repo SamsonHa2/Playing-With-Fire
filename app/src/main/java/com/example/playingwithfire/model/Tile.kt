@@ -1,4 +1,4 @@
-package com.example.playingwithfire.data
+package com.example.playingwithfire.model
 
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf

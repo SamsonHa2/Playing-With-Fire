@@ -1,4 +1,6 @@
-package com.example.playingwithfire.data
+package com.example.playingwithfire.model
+
+import com.example.playingwithfire.domain.behaviors.ChasePlayerBehavior
 
 data class Player(
     val id: String,
@@ -10,7 +12,8 @@ data class Player(
     var bombCount: Int = 1,
     var fireRange: Int = 1,
     var speed: Float = 2f,
-    var direction: Direction = Direction.NONE
+    var direction: Direction = Direction.NONE,
+    var behavior: ChasePlayerBehavior = ChasePlayerBehavior()
 ){
     fun move(delta: Double) {
         val dx = when (direction) {

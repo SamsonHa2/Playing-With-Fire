@@ -1,4 +1,4 @@
-package com.example.playingwithfire.data
+package com.example.playingwithfire.model
 
 enum class Direction {
     UP, DOWN, LEFT, RIGHT, NONE
