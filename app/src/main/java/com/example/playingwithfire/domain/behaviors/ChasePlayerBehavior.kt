@@ -44,10 +44,16 @@ class ChasePlayerBehavior : EnemyBehavior {
         }
 
         // Try to find a path to the nearest breakable wall.
-        val breakableWallPath = shortestPath(dangerZones, player.position, '+', PathfindingCosts.breakableWall)
-        if (breakableWallPath != null) {
-            println("Homing in to destructible wall...")
-            return breakableWallPath.first()
+        // Skip breakable wall logic if already adjacent to one
+        if (isAdjacentToBreakableWall(player.position, dangerZones)) {
+            println("Already adjacent to a breakable wall. Skipping wall-seeking logic.")
+        } else {
+            val breakableWallPath =
+                shortestPath(dangerZones, player.position, '+', PathfindingCosts.breakableWall)
+            if (breakableWallPath != null) {
+                println("Homing in to destructible wall...")
+                return breakableWallPath.first()
+            }
         }
 
         // Try to find a path to the nearest enemy.
@@ -113,6 +119,13 @@ class ChasePlayerBehavior : EnemyBehavior {
             val isBreakableWall = mapEquals(dangerZones, target, listOf('+'))
             val canEscape = canEscapeAfterBombPlaced(player, gameState, Bomb(player.position, player.fireRange))
             isBreakableWall && canEscape
+        }
+    }
+    private fun isAdjacentToBreakableWall(position: Position, map: List<List<Char>>): Boolean {
+        val directions = listOf(Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT)
+        return directions.any { direction ->
+            val target = shift(position, direction)
+            mapEquals(map, target, listOf('+'))
         }
     }
 }
