@@ -25,7 +25,7 @@ object Pathfinding {
             val (length, location) = pq.poll()!!
 
             if (mapEquals(map, location, endChar)) {
-                println("Found shortest path to $location, path length $length, position: (${start.y.toInt()}, ${start.x.toInt()}), end char: $endChar, costs $costs, map: $map")
+                //println("Found shortest path to $location, path length $length, position: (${start.y.toInt()}, ${start.x.toInt()}), end char: $endChar, costs $costs, map: $map")
                 return shortestPathBacktrack(map, distances, location, costs)
             }
 
@@ -44,7 +44,7 @@ object Pathfinding {
             }
         }
 
-        println("position: (${start.y.toInt()}, ${start.x.toInt()}) map: $map")
+        //println("position: (${start.y.toInt()}, ${start.x.toInt()}) map: $map")
         return null
     }
 
@@ -81,7 +81,7 @@ object Pathfinding {
         }
 
         path.reverse()
-        println("Shortest path move sequence: $path")
+        //println("Shortest path move sequence: $path")
         return path
     }
 }
