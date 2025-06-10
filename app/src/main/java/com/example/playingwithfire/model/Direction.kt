@@ -1,5 +1,5 @@
 package com.example.playingwithfire.model
 
 enum class Direction {
-    UP, DOWN, LEFT, RIGHT, NONE
+    UP, DOWN, LEFT, RIGHT
 }
