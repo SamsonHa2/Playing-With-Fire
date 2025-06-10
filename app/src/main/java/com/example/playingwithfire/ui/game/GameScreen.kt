@@ -1,5 +1,6 @@
 package com.example.playingwithfire.ui.game
 
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -26,21 +27,32 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.playingwithfire.R
 import com.example.playingwithfire.model.Bomb
+import com.example.playingwithfire.model.Direction
 import com.example.playingwithfire.model.Explosion
 import com.example.playingwithfire.model.Player
+import com.example.playingwithfire.model.PlayerState
 import com.example.playingwithfire.model.PowerUp
 import com.example.playingwithfire.model.PowerUpType
 import com.example.playingwithfire.model.TileType
@@ -257,46 +269,143 @@ fun ExplosionSprite(explosion: Explosion, tileSize: Dp){
 
 @Composable
 fun PlayerSprite(player: Player, tileSize: Dp){
-    // Use LocalDensity to ensure the size is calculated correctly and stays even
-    val density = LocalDensity.current.density
-
-    // Calculate player size and ensure it's even
-    val playerSizePx = (tileSize * player.size).value * density
-    val adjustedPlayerSizePx = (playerSizePx / 2).roundToInt() * 2
-    val playerSize = (adjustedPlayerSizePx / density).dp
     Box(
         modifier = Modifier
-            .size(playerSize)
+            .size(tileSize)
             .offset(
-                x = tileSize * player.position.x - playerSize / 2,
-                y = tileSize * player.position.y - playerSize / 2
+                x = tileSize * player.position.x - tileSize / 2,
+                y = tileSize * player.position.y - tileSize / 2
             )
-            .clip(CircleShape)
-            .background(Color.Red)
-            ,
-    )
+    ) {
+        val context = LocalContext.current
+        val bitmap = ImageBitmap.imageResource(context.resources, R.drawable.player)
+        AnimatedSpriteFromSheet(
+            bitmap,
+            player,
+            modifier = Modifier.size(tileSize)
+        )
+    }
 }
 
 @Composable
-fun BombSprite(bomb: Bomb, tileSize: Dp){
-    // Use LocalDensity to ensure the size is calculated correctly and stays even
-    val density = LocalDensity.current.density
+fun AnimatedSpriteFromSheet(
+    bitmap: ImageBitmap,
+    player: Player,
+    modifier: Modifier = Modifier
+) {
+    val frameMillis = 150 // ms per frame
 
-    // Calculate player size and ensure it's even
-    val bombSizePx = tileSize.value * density
-    val adjustedBombSizePx = (bombSizePx / 2).roundToInt() * 2
-    val bombSize = (adjustedBombSizePx / density).dp
+    // Mutable state to manually track animation progress
+    val animationProgress = remember { mutableStateOf(0f) }
+
+    // Start animation loop only when running
+    if (player.state == PlayerState.RUNNING) {
+        LaunchedEffect(player.state == PlayerState.RUNNING) {
+            while (true) {
+                animationProgress.value = 0f
+                delay(frameMillis.toLong())
+                animationProgress.value = 0.6f
+                delay(frameMillis.toLong())
+            }
+        }
+    } else {
+        animationProgress.value = 0f // Force reset
+    }
+
+    Canvas(modifier = modifier) {
+        val canvasWidth = size.width
+        val canvasHeight = size.height
+        val frameWidth = bitmap.width / 3
+        val frameHeight = bitmap.height / 4
+
+        val row = when (player.direction) {
+            Direction.DOWN -> 0
+            Direction.UP -> 1
+            Direction.RIGHT -> 2
+            Direction.LEFT -> 3
+        }
+
+        val col = when {
+            player.state == PlayerState.IDLE -> 0 // Idle: always show first frame
+            animationProgress.value < 0.5f -> 1
+            else -> 2
+        }
+
+        drawImage(
+            image = bitmap,
+            srcOffset = IntOffset(col * frameWidth, row * frameHeight),
+            srcSize = IntSize(frameWidth, frameHeight),
+            dstOffset = IntOffset.Zero,
+            dstSize = IntSize(canvasWidth.toInt(), canvasHeight.toInt()),
+            filterQuality = FilterQuality.None
+        )
+        //println("state: ${player.state}, isRunning: ${player.state == PlayerState.RUNNING}, progress: ${animationProgress.value}, col: $col")
+    }
+}
+@Composable
+fun BombSprite(bomb: Bomb, tileSize: Dp){
     Box(
         modifier = Modifier
-            .size(bombSize)
+            .size(tileSize)
             .offset(
-                x = tileSize * bomb.position.x - bombSize / 2,
-                y = tileSize * bomb.position.y - bombSize / 2
+                x = tileSize * bomb.position.x - tileSize / 2,
+                y = tileSize * bomb.position.y - tileSize / 2
             )
-            .clip(CircleShape)
-            .background(Color.Green)
         ,
-    )
+    ) {
+        val context = LocalContext.current
+        val bitmap = ImageBitmap.imageResource(context.resources, R.drawable.bomb)
+
+        // Mutable state to manually track animation progress
+        val animationProgress = remember { mutableStateOf(0f) }
+        val frameMillis = 1000/60
+
+        // Start animation loop only when running
+        LaunchedEffect(bomb.remainingTime >= 0.0) {
+            while (true) {
+                animationProgress.value = (bomb.remainingTime / 3.0).toFloat()
+                delay(frameMillis.toLong())
+            }
+        }
+        Canvas(modifier = Modifier.size(tileSize)) {
+            val canvasWidth = size.width
+            val canvasHeight = size.height
+            val frameWidth = bitmap.width / 19
+            val frameHeight = bitmap.height
+
+            val row = 0
+            val col = when {
+                animationProgress.value > 0.95f -> 0
+                animationProgress.value > 0.9f -> 1
+                animationProgress.value > 0.85f -> 2
+                animationProgress.value > 0.8f -> 3
+                animationProgress.value > 0.75f -> 4
+                animationProgress.value > 0.7f -> 5
+                animationProgress.value > 0.65f -> 6
+                animationProgress.value > 0.6f -> 7
+                animationProgress.value > 0.55f -> 8
+                animationProgress.value > 0.5f -> 9
+                animationProgress.value > 0.45f -> 10
+                animationProgress.value > 0.4f -> 11
+                animationProgress.value > 0.35f -> 12
+                animationProgress.value > 0.3f -> 13
+                animationProgress.value > 0.25f -> 14
+                animationProgress.value > 0.2f -> 15
+                animationProgress.value > 0.15f -> 16
+                animationProgress.value > 0.1f -> 17
+                else -> 18
+            }
+
+            drawImage(
+                image = bitmap,
+                srcOffset = IntOffset(col * frameWidth, row * frameHeight),
+                srcSize = IntSize(frameWidth, frameHeight),
+                dstOffset = IntOffset.Zero,
+                dstSize = IntSize(canvasWidth.toInt(), canvasHeight.toInt()),
+                filterQuality = FilterQuality.None
+            )
+        }
+    }
 }
 
 @Composable
