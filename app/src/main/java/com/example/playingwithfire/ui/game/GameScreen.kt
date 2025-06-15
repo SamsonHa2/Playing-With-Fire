@@ -37,7 +37,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -88,6 +87,7 @@ fun GameScreen(
     val context = LocalContext.current
     val bombBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.bomb) }
     val playerBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.player) }
+    val powerUpBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.powerups) }
     LaunchedEffect(true) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
@@ -182,6 +182,7 @@ fun GameScreen(
             for (powerUp in powerUps){
                 PowerUpSprite(
                     powerUp,
+                    powerUpBitmap,
                     tileSize
                 )
             }
@@ -210,29 +211,45 @@ fun GameScreen(
 }
 
 @Composable
-fun PowerUpSprite(powerUp: PowerUp, size: Dp) {
-    val color = when (powerUp.type) {
-        PowerUpType.Speed -> Color.White
-        PowerUpType.FireRange -> Color.Magenta
-        PowerUpType.ExtraBomb -> Color.Cyan
-    }
+fun PowerUpSprite(powerUp: PowerUp, bitmap: ImageBitmap, tileSize: Dp) {
+    val frameWidth = bitmap.width / 3
+    val frameHeight = bitmap.height
     val density = LocalDensity.current.density
 
     // Calculate power up size and ensure it's even
-    val sizePx = size.value * density
+    val sizePx = tileSize.value * density
     val adjustedSizePx = (sizePx / 2).roundToInt() * 2
     val powerUpSize = (adjustedSizePx / density).dp
 
     Box(
         modifier = Modifier
-            .size(size)
+            .size(tileSize)
             .offset(
-                x = size * powerUp.position.x - powerUpSize / 2,
-                y = size * powerUp.position.y - powerUpSize / 2
+                x = tileSize * powerUp.position.x - powerUpSize / 2,
+                y = tileSize * powerUp.position.y - powerUpSize / 2
             )
-            .background(color),
+            .background(Color.LightGray),
 
-    )
+    ){
+        Canvas(modifier = Modifier.size(tileSize)) {
+            val row = 0
+
+            val col = when (powerUp.type){
+                PowerUpType.ExtraBomb -> 0
+                PowerUpType.Speed -> 1
+                PowerUpType.FireRange -> 2
+            }
+
+            drawImage(
+                image = bitmap,
+                srcOffset = IntOffset(col * frameWidth, row * frameHeight),
+                srcSize = IntSize(frameWidth, frameHeight),
+                dstOffset = IntOffset.Zero,
+                dstSize = IntSize(size.width.toInt(), size.height.toInt()),
+                filterQuality = FilterQuality.None
+            )
+        }
+    }
 }
 
 @Composable
