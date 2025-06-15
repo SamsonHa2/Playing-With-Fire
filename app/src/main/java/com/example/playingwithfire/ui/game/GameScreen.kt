@@ -9,7 +9,6 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -65,6 +64,7 @@ import com.example.playingwithfire.model.Player
 import com.example.playingwithfire.model.PlayerState
 import com.example.playingwithfire.model.PowerUp
 import com.example.playingwithfire.model.PowerUpType
+import com.example.playingwithfire.model.Tile
 import com.example.playingwithfire.model.TileType
 import com.example.playingwithfire.util.UiEvent
 import kotlinx.coroutines.delay
@@ -88,6 +88,7 @@ fun GameScreen(
     val bombBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.bomb) }
     val playerBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.player) }
     val powerUpBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.powerups) }
+    val tileBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.tile) }
     LaunchedEffect(true) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
@@ -152,11 +153,7 @@ fun GameScreen(
                 for (y in 0 until grid.height) {
                     Row {
                         for (x in 0 until grid.width) {
-                            when (grid[x, y].type) {
-                                TileType.Empty -> EmptyBox(size = tileSize)
-                                TileType.UnbreakableWall -> UnbreakableBox(size = tileSize)
-                                TileType.BreakableWall -> BreakableBox(size = tileSize)
-                            }
+                            Tile(tileBitmap, grid[x, y], tileSize)
                         }
                     }
                 }
@@ -232,8 +229,6 @@ fun PowerUpSprite(powerUp: PowerUp, bitmap: ImageBitmap, tileSize: Dp) {
 
     ){
         Canvas(modifier = Modifier.size(tileSize)) {
-            val row = 0
-
             val col = when (powerUp.type){
                 PowerUpType.ExtraBomb -> 0
                 PowerUpType.Speed -> 1
@@ -242,7 +237,7 @@ fun PowerUpSprite(powerUp: PowerUp, bitmap: ImageBitmap, tileSize: Dp) {
 
             drawImage(
                 image = bitmap,
-                srcOffset = IntOffset(col * frameWidth, row * frameHeight),
+                srcOffset = IntOffset(col * frameWidth, 0),
                 srcSize = IntSize(frameWidth, frameHeight),
                 dstOffset = IntOffset.Zero,
                 dstSize = IntSize(size.width.toInt(), size.height.toInt()),
@@ -253,33 +248,40 @@ fun PowerUpSprite(powerUp: PowerUp, bitmap: ImageBitmap, tileSize: Dp) {
 }
 
 @Composable
-fun EmptyBox(size: Dp) {
+fun Tile(bitmap: ImageBitmap, tile: Tile, tileSize: Dp) {
+    val frameWidth = bitmap.width / 3
+    val frameHeight = bitmap.height
+    val col = when (tile.type){
+        TileType.Empty -> 0
+        TileType.BreakableWall -> 1
+        TileType.UnbreakableWall -> 2
+    }
     Box(
         modifier = Modifier
-            .size(size)
+            .size(tileSize)
             .background(Color.LightGray)
-    )
+    ){
+        Canvas(modifier = Modifier.size(tileSize)) {
+            drawImage(
+                image = bitmap,
+                srcOffset = IntOffset(0, 0),
+                srcSize = IntSize(frameWidth, frameHeight),
+                dstOffset = IntOffset.Zero,
+                dstSize = IntSize(size.width.toInt(), size.height.toInt()),
+                filterQuality = FilterQuality.None
+            )
+            drawImage(
+                image = bitmap,
+                srcOffset = IntOffset(col * frameWidth, 0),
+                srcSize = IntSize(frameWidth, frameHeight),
+                dstOffset = IntOffset.Zero,
+                dstSize = IntSize(size.width.toInt(), size.height.toInt()),
+                filterQuality = FilterQuality.None
+            )
+        }
+    }
 }
 
-@Composable
-fun UnbreakableBox(size: Dp) {
-    Box(
-        modifier = Modifier
-            .size(size)
-            .border(1.dp, Color.Black)
-            .background(Color.DarkGray)
-    )
-}
-
-@Composable
-fun BreakableBox(size: Dp) {
-    Box(
-        modifier = Modifier
-            .size(size)
-            .border(1.dp, Color.Black)
-            .background(Color.Yellow)
-    )
-}
 @Composable
 fun ExplosionSprite(explosion: Explosion, tileSize: Dp){
     // Use LocalDensity to ensure the size is calculated correctly and stays even
