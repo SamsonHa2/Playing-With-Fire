@@ -118,8 +118,7 @@ class GameEngine {
             val bomb = iterator.next()
             bomb.remainingTime -= delta
             if (bomb.remainingTime <= 0) {
-                val explosion = explodeBomb(bomb)
-                explosions.add(explosion)
+                explodeBomb(bomb)
                 iterator.remove()
             }
         }
@@ -141,7 +140,10 @@ class GameEngine {
     }
 
     private fun handleExplosionCollision(player: Player, mainTilePos: Position, diaTilePos: Position): Player{
-        val explosionPositions = explosions.flatMap { it.affectedPositions }
+        val explosionPositions = mutableListOf<Position>()
+        for (explosion in explosions){
+            explosionPositions.add(explosion.position)
+        }
         if (explosionPositions.contains(mainTilePos) || explosionPositions.contains(diaTilePos)){
             Log.d("GameEvent", "Player stepped in explosion")
         }
@@ -188,22 +190,20 @@ class GameEngine {
         return bomb
     }
 
-    private fun explodeBomb(bomb: Bomb): Explosion {
+    private fun explodeBomb(bomb: Bomb){
         val originX = bomb.position.x.toInt()
         val originY = bomb.position.y.toInt()
-        val affected = mutableListOf<Position>()
 
         // Always include bomb's own tile
-        affected.add(Position(originX.toFloat() + 0.5f, originY.toFloat() + 0.5f))
+        explosions.add(Explosion(Position(originX.toFloat() + 0.5f, originY.toFloat() + 0.5f), Direction.UP, ExplosionType.Center))
 
-        val directions = listOf(
-            Pair(1, 0),   // Right
-            Pair(-1, 0),  // Left
-            Pair(0, -1),  // Up
-            Pair(0, 1)    // Down
-        )
-
-        for ((dx, dy) in directions) {
+        for (dir in Direction.entries) {
+            val (dx, dy) = when (dir) {
+                Direction.UP -> 0 to -1
+                Direction.DOWN -> 0 to 1
+                Direction.LEFT -> -1 to 0
+                Direction.RIGHT -> 1 to 0
+            }
             for (i in 1..bomb.range) {
                 val x = originX + dx * i
                 val y = originY + dy * i
@@ -213,19 +213,29 @@ class GameEngine {
 
                 val tile = grid[x, y]
 
-                val pos = Position(x.toFloat() + 0.5f, y.toFloat() + 0.5f)
-                affected.add(pos)
+                val pos = Position(x + 0.5f, y + 0.5f)
 
-                if (tile.type == TileType.UnbreakableWall) {
-                    affected.remove(pos)
-                    break
-                }
+                if (tile.type == TileType.UnbreakableWall) break
 
                 if (tile.type == TileType.BreakableWall) {
                     tile.type = TileType.Empty
                     spawnPowerUp(tile.position)
+                    explosions.add(Explosion(pos, dir, ExplosionType.Outer))
                     break
                 }
+
+                val existing = explosions.find { it.position == pos }
+                if (existing != null) {
+                    if (existing.type == ExplosionType.Outer &&
+                        ((existing.direction.isVertical() && dir.isVertical()) ||
+                                (existing.direction.isHorizontal() && dir.isHorizontal()))
+                    ) {
+                        existing.type = ExplosionType.Middle
+                        explosions.add(Explosion(pos, dir, ExplosionType.Middle))
+                    }
+                }
+                val type = if (i == bomb.range) ExplosionType.Outer else ExplosionType.Middle
+                explosions.add(Explosion(pos, dir, type))
             }
         }
 
@@ -234,10 +244,10 @@ class GameEngine {
             player.bombs.remove(bomb)
             player.bombCount += 1
         }
-        return Explosion(
-            affectedPositions = affected
-        )
     }
+
+    private fun Direction.isVertical() = this == Direction.UP || this == Direction.DOWN
+    private fun Direction.isHorizontal() = this == Direction.LEFT || this == Direction.RIGHT
 
     private fun spawnPowerUp(position: Position){
         val powerUpTypes = PowerUpType.entries.toTypedArray()

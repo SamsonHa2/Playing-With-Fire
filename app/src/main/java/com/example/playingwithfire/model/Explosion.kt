@@ -1,6 +1,8 @@
 package com.example.playingwithfire.model
 
 data class Explosion(
-    val affectedPositions: List<Position>,
-    var remainingTime: Double = 3.0 // seconds
+    val position: Position,
+    val direction: Direction,
+    var type: ExplosionType,
+    var remainingTime: Double = 1.5 // seconds
 )

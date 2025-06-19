@@ -60,6 +60,7 @@ import com.example.playingwithfire.R
 import com.example.playingwithfire.model.Bomb
 import com.example.playingwithfire.model.Direction
 import com.example.playingwithfire.model.Explosion
+import com.example.playingwithfire.model.ExplosionType
 import com.example.playingwithfire.model.Player
 import com.example.playingwithfire.model.PlayerState
 import com.example.playingwithfire.model.PowerUp
@@ -89,6 +90,7 @@ fun GameScreen(
     val playerBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.player) }
     val powerUpBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.powerup) }
     val tileBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.tile) }
+    val explosionBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.explosion) }
     LaunchedEffect(true) {
         viewModel.uiEvent.collectLatest { event ->
             when (event) {
@@ -187,6 +189,7 @@ fun GameScreen(
             for (explosion in explosions){
                 ExplosionSprite(
                     explosion,
+                    explosionBitmap,
                     tileSize
                 )
             }
@@ -283,24 +286,41 @@ fun Tile(bitmap: ImageBitmap, tile: Tile, tileSize: Dp) {
 }
 
 @Composable
-fun ExplosionSprite(explosion: Explosion, tileSize: Dp){
-    // Use LocalDensity to ensure the size is calculated correctly and stays even
-    val density = LocalDensity.current.density
+fun ExplosionSprite(explosion: Explosion, bitmap: ImageBitmap, tileSize: Dp){
+    val frameWidth = bitmap.width / 4
+    val frameHeight = bitmap.height / 2
+    val (row, col) = when (explosion.type) {
+        ExplosionType.Center -> 1 to 0
+        ExplosionType.Middle -> when (explosion.direction) {
+            Direction.UP, Direction.DOWN -> 1 to 2
+            Direction.LEFT, Direction.RIGHT -> 1 to 1
+        }
+        ExplosionType.Outer -> when (explosion.direction) {
+            Direction.UP -> 0 to 2
+            Direction.DOWN -> 0 to 3
+            Direction.LEFT -> 0 to 0
+            Direction.RIGHT -> 0 to 1
+        }
+    }
 
-    // Calculate explosion size and ensure it's even
-    val explosionSizePx = tileSize.value * density
-    val adjustedExplosionSizePx = (explosionSizePx / 2).roundToInt() * 2
-    val explosionSize = (adjustedExplosionSizePx / density).dp
-    for (position in explosion.affectedPositions) {
-        Box(
-            modifier = Modifier
-                .size(explosionSize)
-                .offset(
-                    x = tileSize * position.x - explosionSize / 2,
-                    y = tileSize * position.y - explosionSize / 2
-                )
-                .background(Color.Blue),
-        )
+    Box(
+        modifier = Modifier
+            .size(tileSize)
+            .offset(
+                x = tileSize * explosion.position.x - tileSize / 2,
+                y = tileSize * explosion.position.y - tileSize / 2
+            )
+    ){
+        Canvas(modifier = Modifier.size(tileSize)) {
+            drawImage(
+                image = bitmap,
+                srcOffset = IntOffset(col * frameWidth, frameHeight * row),
+                srcSize = IntSize(frameWidth, frameHeight),
+                dstOffset = IntOffset.Zero,
+                dstSize = IntSize(size.width.toInt(), size.height.toInt()),
+                filterQuality = FilterQuality.None
+            )
+        }
     }
 }
 

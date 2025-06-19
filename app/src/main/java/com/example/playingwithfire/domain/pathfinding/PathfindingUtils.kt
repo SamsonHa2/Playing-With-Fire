@@ -135,12 +135,10 @@ fun calculateDangerZones(curPlayer: Player, gameState: GameState): List<List<Cha
 
     // Mark explosions
     for (explosion in gameState.explosions) {
-        for (pos in explosion.affectedPositions) {
-            val x = pos.x.toInt()
-            val y = pos.y.toInt()
-            if (x !in 0 until width || y !in 0 until height) continue
-            charGrid[y][x] = '*'
-        }
+        val x = explosion.position.x.toInt()
+        val y = explosion.position.y.toInt()
+        if (x !in 0 until width || y !in 0 until height) continue
+        charGrid[y][x] = '*'
     }
 
     // Convert to List<List<Char>>
