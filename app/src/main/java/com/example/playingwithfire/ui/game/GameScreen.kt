@@ -87,7 +87,7 @@ fun GameScreen(
     val context = LocalContext.current
     val bombBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.bomb) }
     val playerBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.player) }
-    val powerUpBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.powerups) }
+    val powerUpBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.powerup) }
     val tileBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.tile) }
     LaunchedEffect(true) {
         viewModel.uiEvent.collectLatest { event ->
