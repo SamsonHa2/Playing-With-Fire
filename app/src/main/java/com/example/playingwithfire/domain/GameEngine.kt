@@ -6,7 +6,7 @@ import com.example.playingwithfire.model.*
 import kotlin.math.min
 
 class GameEngine {
-    private val grid: Grid = MapGenerator.generateGrid(15, 13, 50, 30)
+    private val grid: Grid = MapGenerator.generateGrid(17, 12, 55, 33)
 
     private val players = mutableMapOf<String, Player>()
     private val bombs = mutableListOf<Bomb>()
@@ -15,7 +15,7 @@ class GameEngine {
 
     init {
         spawnPlayer("Player 1", "Player 1", Position(1.5f,1.5f))
-        spawnPlayer("Bot 1", "Bot 1", Position(13.5f,11.5f))
+        spawnPlayer("Bot 1", "Bot 1", Position(15.5f,10.5f))
     }
     fun getGameState(): GameState {
         return GameState(
@@ -63,7 +63,15 @@ class GameEngine {
                     Moves.NO_CHANGE -> { /* do nothing */ }
                 }
             }
-            if (player.state == PlayerState.IDLE) continue
+            if (player.state == PlayerState.IDLE) {
+                val playerCopy = player.copy()
+                val tile = grid[playerCopy.position.x.toInt(), playerCopy.position.y.toInt()]
+
+                val newPlayer = handleExplosionCollision(playerCopy, tile.position, tile.position)
+                updatePlayer(id, newPlayer)
+                continue
+            }
+
             val movedPlayer = player.copy().apply { move(delta) }
             val playerRadius = player.size / 2
             val direction = player.direction
@@ -140,12 +148,14 @@ class GameEngine {
     }
 
     private fun handleExplosionCollision(player: Player, mainTilePos: Position, diaTilePos: Position): Player{
-        val explosionPositions = mutableListOf<Position>()
         for (explosion in explosions){
-            explosionPositions.add(explosion.position)
-        }
-        if (explosionPositions.contains(mainTilePos) || explosionPositions.contains(diaTilePos)){
-            Log.d("GameEvent", "Player stepped in explosion")
+            if (player.id in explosion.damagedPlayers) continue
+            if (explosion.position == mainTilePos || explosion.position == diaTilePos) {
+                player.hp -= 32
+                explosion.damagedPlayers.add(player.id)
+                Log.d("GameEvent", "Player stepped in explosion \t $explosion")
+                break
+            }
         }
         return player
     }

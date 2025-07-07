@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -40,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.FilterQuality
@@ -49,7 +51,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.imageResource
-import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
@@ -122,91 +123,110 @@ fun GameScreen(
             delay(1L)
         }
     }
-
-    Row(
-        modifier = Modifier.fillMaxWidth()
+    BoxWithConstraints(
+        modifier = Modifier.fillMaxSize()
     ) {
         BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .weight(0.5f),
-            contentAlignment = Alignment.TopStart
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.BottomCenter
         ) {
-            val size = maxWidth / 6  // Adjust scale as needed (smaller = bigger)
-            ArrowButtonGrid(
-                viewModel = viewModel,
-                size = size
-            )
-        }
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxWidth()
-                .weight(1.5f)
-                .padding(16.dp),
-            contentAlignment = Alignment.TopStart
-        ) {
-            val tileSize = calculateCellSize(
-                maxWidth = maxWidth,
-                maxHeight = maxHeight,
-                gridWidth = grid.width,
-                gridHeight = grid.height
-            )
-            Column {
-                for (y in 0 until grid.height) {
-                    Row {
-                        for (x in 0 until grid.width) {
-                            Tile(tileBitmap, grid[x, y], tileSize)
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxWidth().fillMaxHeight(0.89f),
+                contentAlignment = Alignment.Center,
+            ) {
+                val tileSize = calculateCellSize(
+                    maxWidth = maxWidth,
+                    maxHeight = maxHeight,
+                    gridWidth = grid.width,
+                    gridHeight = grid.height
+                )
+                Box(
+                    modifier = Modifier
+                        .size(tileSize * grid.width, tileSize * grid.height),
+                ) {
+                    Column {
+                        for (y in 0 until grid.height) {
+                            Row {
+                                for (x in 0 until grid.width) {
+                                    Tile(tileBitmap, grid[x, y], tileSize)
+                                }
+                            }
                         }
+                    }
+                    for (bomb in bombs) {
+                        key(bomb.id) {
+                            BombSprite(
+                                bomb = bomb,
+                                bitmap = bombBitmap,
+                                tileSize = tileSize
+                            )
+                        }
+                    }
+
+                    for (player in players) {
+                        PlayerSprite(
+                            player,
+                            playerBitmap,
+                            tileSize
+                        )
+                    }
+
+                    for (powerUp in powerUps) {
+                        PowerUpSprite(
+                            powerUp,
+                            powerUpBitmap,
+                            tileSize
+                        )
+                    }
+
+                    for (explosion in explosions) {
+                        ExplosionSprite(
+                            explosion,
+                            explosionBitmap,
+                            tileSize
+                        )
                     }
                 }
             }
-            for (bomb in bombs) {
-                key(bomb.id) {
-                    BombSprite(
-                        bomb = bomb,
-                        bitmap = bombBitmap,
-                        tileSize = tileSize
-                    )
-                }
-            }
-
-            for (player in players){
-                PlayerSprite(
-                    player,
-                    playerBitmap,
-                    tileSize
-                )
-            }
-
-            for (powerUp in powerUps){
-                PowerUpSprite(
-                    powerUp,
-                    powerUpBitmap,
-                    tileSize
-                )
-            }
-
-            for (explosion in explosions){
-                ExplosionSprite(
-                    explosion,
-                    explosionBitmap,
-                    tileSize
-                )
-            }
         }
-        BoxWithConstraints(
-            modifier = Modifier
-                .fillMaxSize()
-                .weight(0.5f),
-            contentAlignment = Alignment.TopStart
+        Row(
+            Modifier
+                .fillMaxWidth()
         ) {
-            val size = maxWidth / 6  // Adjust scale as needed (smaller = bigger)
-            BombButton(
-                icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
-                onClick = { viewModel.onEvent(GameEvent.OnBombClick) },
-                size = size
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .weight(1f),
+                contentAlignment = Alignment.TopStart
+            ) {
+                ArrowButtonGrid(
+                    viewModel = viewModel,
+                    size = maxWidth / 4
+                )
+            }
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(2f),
             )
+            BoxWithConstraints(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp)
+                    .weight(1f),
+                contentAlignment = Alignment.TopEnd
+            ) {
+                val size = maxWidth / 5  // Adjust scale as needed (smaller = bigger)
+                BombButton(
+                    icon = Icons.AutoMirrored.Filled.KeyboardArrowLeft,
+                    onClick = { viewModel.onEvent(GameEvent.OnBombClick) },
+                    size = size
+                )
+            }
         }
+        GamePlayerHud(Modifier.padding(maxHeight*0.02f), players)
     }
 }
 
@@ -442,9 +462,9 @@ fun BombButton(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .alpha(0.4f),
         verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.End
     ) {
         Box(
             modifier = Modifier
@@ -471,16 +491,19 @@ fun ArrowButtonGrid(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .alpha(0.4f),
         verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.Start
     ) {
-        ArrowButton(
-            icon = Icons.Default.KeyboardArrowUp,
-            onPress = { viewModel.onEvent(GameEvent.OnUpClick) },
-            onRelease = { viewModel.onEvent(GameEvent.OnDirectionRelease) },
-            size = size
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Spacer(modifier = Modifier.size(size))
+            ArrowButton(
+                icon = Icons.Default.KeyboardArrowUp,
+                onPress = { viewModel.onEvent(GameEvent.OnUpClick) },
+                onRelease = { viewModel.onEvent(GameEvent.OnDirectionRelease) },
+                size = size
+            )
+        }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             ArrowButton(
@@ -498,12 +521,15 @@ fun ArrowButtonGrid(
             )
         }
 
-        ArrowButton(
-            icon = Icons.Default.KeyboardArrowDown,
-            onPress = { viewModel.onEvent(GameEvent.OnDownClick) },
-            onRelease = { viewModel.onEvent(GameEvent.OnDirectionRelease) },
-            size = size
-        )
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Spacer(modifier = Modifier.size(size))
+            ArrowButton(
+                icon = Icons.Default.KeyboardArrowDown,
+                onPress = { viewModel.onEvent(GameEvent.OnDownClick) },
+                onRelease = { viewModel.onEvent(GameEvent.OnDirectionRelease) },
+                size = size
+            )
+        }
     }
 }
 
@@ -553,11 +579,10 @@ fun calculateCellSize(
 
     // Round to nearest even number in pixels, then convert to Dp
     val px = with(LocalDensity.current) { rawSize.toPx() }
-    val evenPx = (px / 2).roundToInt() * 2
-    return with(LocalDensity.current) { evenPx.toDp() }
+    return with(LocalDensity.current) { px.toDp() }
 }
 
-@Preview(showBackground = true, device = Devices.AUTOMOTIVE_1024p, widthDp = 720, heightDp = 360)
+@Preview(showBackground = true, widthDp = 1920, heightDp = 1080)
 @Composable
 fun GameScreenPreview() {
     GameScreen(
