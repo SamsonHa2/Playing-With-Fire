@@ -85,6 +85,7 @@ fun GameScreen(
     val bombs = gameState.bombs
     val explosions = gameState.explosions
     val powerUps = gameState.powerUps
+    val round = gameState.round
 
     val context = LocalContext.current
     val bombBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.bomb) }
@@ -226,7 +227,8 @@ fun GameScreen(
                 )
             }
         }
-        GamePlayerHud(Modifier.padding(maxHeight*0.02f), players)
+        GamePlayerHud(Modifier.padding(maxHeight*0.02f), players, round)
+        GameNewRound(round)
     }
 }
 

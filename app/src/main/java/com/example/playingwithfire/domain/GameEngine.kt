@@ -6,13 +6,13 @@ import com.example.playingwithfire.model.*
 import kotlin.math.min
 
 class GameEngine {
-    private val grid: Grid = MapGenerator.generateGrid(17, 12, 55, 33)
+    private var grid: Grid = MapGenerator.generateGrid(17, 12, 55, 33)
 
     private val players = mutableMapOf<String, Player>()
-    private val bombs = mutableListOf<Bomb>()
-    private val explosions = mutableListOf<Explosion>()
-    private val powerUps = mutableListOf<PowerUp>()
-
+    private var bombs = mutableListOf<Bomb>()
+    private var explosions = mutableListOf<Explosion>()
+    private var powerUps = mutableListOf<PowerUp>()
+    private var round = 1
     init {
         spawnPlayer("Player 1", "Player 1", Position(1.5f,1.5f))
         spawnPlayer("Bot 1", "Bot 1", Position(15.5f,10.5f))
@@ -23,7 +23,8 @@ class GameEngine {
             players = players.values.toList(),
             bombs = bombs.toList(),
             explosions = explosions.toList(),
-            powerUps = powerUps.toList()
+            powerUps = powerUps.toList(),
+            round = round
         )
     }
 
@@ -48,8 +49,22 @@ class GameEngine {
         updateBombs(delta)
         updateExplosions(delta)
         updatePlayers(delta)
+        checkRoundWin()
     }
 
+    private fun checkRoundWin(){
+        for (player in players.values){
+            if (player.hp <= 0) {
+                val opponentId = if (player.id == "Player 1") "Bot 1" else "Player 1"
+                players[opponentId]?.apply {
+                    wins += 1
+                    resetRound()
+                }
+                round += 1
+            }
+        }
+
+    }
     private fun updatePlayers(delta: Double) {
         for ((id, player) in players) {
             if (id == "Bot 1"){
@@ -107,6 +122,27 @@ class GameEngine {
         }
     }
 
+    private fun resetRound(){
+        for (player in players.values){
+            if (player.id == "Player 1"){
+                player.position = Position(1.5f,1.5f)
+            } else {
+                player.position = Position(15.5f,10.5f)
+            }
+
+            player.bombs = ArrayList()
+            player.hp = 100
+            player.bombCount = 1
+            player.fireRange = 1
+            player.speed = 2f
+            player.direction = Direction.LEFT
+            player.state = PlayerState.IDLE
+        }
+        grid = MapGenerator.generateGrid(17, 12, 55, 33)
+        bombs = mutableListOf()
+        explosions = mutableListOf()
+        powerUps = mutableListOf()
+    }
     fun setPlayerRunning(player: Player, direction: Direction) {
         player.direction = direction
         player.state = PlayerState.RUNNING

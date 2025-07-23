@@ -18,7 +18,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -54,7 +53,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun GamePlayerHud(modifier: Modifier = Modifier, players: List<Player>) {
+fun GamePlayerHud(modifier: Modifier = Modifier, players: List<Player>, roundNumber: Int) {
     BoxWithConstraints(modifier = modifier) {
         val fontScale = Resources.getSystem().configuration.fontScale
         val fontSize = ((maxHeight*0.1f).value / fontScale).sp
@@ -84,19 +83,18 @@ fun GamePlayerHud(modifier: Modifier = Modifier, players: List<Player>) {
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.Start
                 ) {
-                    WinCounterBar(modifier = Modifier.fillMaxHeight(0.055f))
+                    WinCounterBar(modifier = Modifier.fillMaxHeight(0.055f), player = players[0])
                     HPBar(modifier = Modifier.fillMaxHeight(0.055f), listOf(Color.Blue, Color.Cyan), players[0])
                     Spacer(modifier = Modifier.fillMaxHeight(0.02f))
                     PowerUpBar(
-                        modifier = Modifier.fillMaxHeight(0.05f),
-                        countList = listOf(0, 0, 0)
+                        modifier = Modifier.fillMaxHeight(0.0275f),
                     )
                 }
                 BoxWithConstraints(
                     modifier = Modifier.weight(1.5f).height(maxHeight*0.16f).fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    TimerDisplay(fontSize, maxHeight)
+                    TimerDisplay(fontSize, maxHeight, roundNumber)
                 }
                 Column(
                     modifier = Modifier
@@ -109,12 +107,11 @@ fun GamePlayerHud(modifier: Modifier = Modifier, players: List<Player>) {
                     verticalArrangement = Arrangement.Top,
                     horizontalAlignment = Alignment.Start
                 ) {
-                    WinCounterBar(modifier = Modifier.fillMaxHeight(0.055f))
+                    WinCounterBar(modifier = Modifier.fillMaxHeight(0.055f), player = players[1])
                     HPBar(modifier = Modifier.fillMaxHeight(0.055f), listOf(Color.Red, Color.Magenta), players[1])
                     Spacer(modifier = Modifier.fillMaxHeight(0.02f))
                     PowerUpBar(
-                        modifier = Modifier.fillMaxHeight(0.05f),
-                        countList = listOf(0, 0, 0)
+                        modifier = Modifier.fillMaxHeight(0.0275f),
                     )
                 }
 
@@ -132,7 +129,7 @@ fun GamePlayerHud(modifier: Modifier = Modifier, players: List<Player>) {
 }
 
 @Composable
-fun WinCounterBar(modifier: Modifier) {
+fun WinCounterBar(modifier: Modifier, player: Player) {
     BoxWithConstraints(modifier = modifier) {
         val maxHeight = maxHeight
         Row(
@@ -142,15 +139,23 @@ fun WinCounterBar(modifier: Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.End
         ) {
-            repeat(2) {
+            // Define the colors for each win state
+            val colors = when (player.wins) {
+                0 -> listOf(Color.Black, Color.Black) // 0 wins, both black
+                1 -> listOf(Color.Black, Color.Green) // 1 win, black then green
+                2 -> listOf(Color.Green, Color.Green) // 2 wins, both green
+                else -> listOf(Color.Black, Color.Black) // Default fallback
+            }
+
+            // Draw the shapes based on the `player.wins` value
+            repeat(2) { index ->
                 TaperedGradientBar(
                     modifier = Modifier.padding(end = maxHeight * 0.35f),
-                    gradientColors = listOf(Color.Black, Color.Black),
+                    gradientColors = listOf(colors[index], colors[index]),
                     width = maxHeight * 0.8f,
                     height = maxHeight * 0.5f,
                     taperAmount = maxHeight * 0.35f,
                 )
-                //Spacer(modifier = Modifier.size(maxHeight * 0.25f))
             }
         }
     }
@@ -208,55 +213,26 @@ fun HPBar(modifier: Modifier, gradientColor: List<Color>, player: Player) {
 }
 
 @Composable
-fun PowerUpBar(modifier: Modifier = Modifier, countList: List<Int>) {
+fun PowerUpBar(modifier: Modifier = Modifier) {
     BoxWithConstraints(
         modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.CenterEnd
     ) {
         val maxHeight = maxHeight
         val maxWidth = maxWidth
-        val fontScale = Resources.getSystem().configuration.fontScale
-        val fontSize = ((maxHeight * 0.7f).value / fontScale).sp
-        val itemSize = maxHeight * 0.7f
         val endPadding = maxHeight * 0.7f
-
-        TaperedGradientBar(
-            modifier = Modifier.padding(end = endPadding),
-            gradientColors = listOf(Color.Gray, Color.Gray),
-            width = maxWidth * 0.5f,
-            height = maxHeight,
-            taperAmount = endPadding,
-        )
-
-        Row(
-            modifier = Modifier
-                .width(maxWidth * 0.5f)
-                .fillMaxHeight()
-                .padding(end = endPadding),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            countList.forEachIndexed { index, count ->
-                PowerUpItem(
-                    count = count.toString(),
-                    size = itemSize,
-                    fontSize = fontSize,
-                    endPadding = if (index != countList.lastIndex) maxWidth * 0.05f else 0.dp
-                )
-            }
+        Row(){
+            TaperedGradientBar(
+                modifier = Modifier.padding(end = endPadding),
+                gradientColors = listOf(Color.Green, Color.Yellow),
+                width = maxWidth * 0.5f,
+                height = maxHeight,
+                taperAmount = endPadding,
+            )
+            Spacer(Modifier.padding(maxHeight*0.2f))
         }
-    }
-}
 
-@Composable
-fun PowerUpItem(count: String, size: Dp, fontSize: TextUnit, endPadding: Dp) {
-    Box(modifier = Modifier.size(size).background(Color.Blue))
-    Text(
-        modifier = Modifier.padding(start = size * 0.3f, end = endPadding),
-        text = count,
-        fontSize = fontSize,
-        fontWeight = FontWeight.Bold
-    )
+    }
 }
 
 @Composable
@@ -317,12 +293,13 @@ fun TaperedGradientBar(
 fun TimerDisplay(
     fontSize: TextUnit,
     maxHeight: Dp,
+    roundNumber: Int,
     totalTimeSeconds: Int = 99,
 ) {
-    var secondsLeft by remember { mutableIntStateOf(totalTimeSeconds) }
-    val isRunning = remember { mutableStateOf(true) }
+    var secondsLeft by remember(roundNumber) { mutableIntStateOf(totalTimeSeconds) }
+    val isRunning = remember(roundNumber) { mutableStateOf(true) }
 
-    LaunchedEffect(key1 = isRunning.value) {
+    LaunchedEffect(key1 = isRunning.value, key2 = roundNumber) {
         while (isRunning.value && secondsLeft > 0) {
             delay(1000L)
             secondsLeft -= 1
@@ -341,5 +318,5 @@ fun TimerDisplay(
 @Preview(showBackground = true, widthDp = 732, heightDp = 412)
 @Composable
 fun GamePlayerHudPreview() {
-    GamePlayerHud(Modifier.fillMaxSize(), players = listOf(Player("1", "s", Position(0f,0f), hp = 55), Player("2", "as", Position(0f,0f))))
+    GamePlayerHud(Modifier.fillMaxSize(), players = listOf(Player("1", "s", Position(0f,0f), wins = 1, hp = 55), Player("2", "as", Position(0f,0f), wins = 2)), 1)
 }
