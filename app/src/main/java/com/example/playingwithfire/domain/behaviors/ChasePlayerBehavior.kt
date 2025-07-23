@@ -38,9 +38,16 @@ class ChasePlayerBehavior : EnemyBehavior {
 
         // Try to find a path to nearest accessible power up.
         val powerUpPath = shortestPath(dangerZones, player.position, 'p', PathfindingCosts.powerUp)
-        if (powerUpPath != null) {
+        if (!powerUpPath.isNullOrEmpty()) {
             println("Seeking power up...")
             return powerUpPath.first()
+        }
+
+        // Try to find a path to the nearest enemy.
+        val toEnemyPath = shortestPath(dangerZones, player.position, 'e', PathfindingCosts.enemy)
+        if (!toEnemyPath.isNullOrEmpty()) {
+            println("Homing in to enemy...")
+            return toEnemyPath.first()
         }
 
         // Try to find a path to the nearest breakable wall.
@@ -50,17 +57,10 @@ class ChasePlayerBehavior : EnemyBehavior {
         } else {
             val breakableWallPath =
                 shortestPath(dangerZones, player.position, '+', PathfindingCosts.breakableWall)
-            if (breakableWallPath != null) {
+            if (!breakableWallPath.isNullOrEmpty()) {
                 println("Homing in to destructible wall...")
                 return breakableWallPath.first()
             }
-        }
-
-        // Try to find a path to the nearest enemy.
-        val toEnemyPath = shortestPath(dangerZones, player.position, 'e', PathfindingCosts.enemy)
-        if (toEnemyPath != null) {
-            println("Homing in to enemy...")
-            return toEnemyPath.first()
         }
 
         // Don't know what else to do
