@@ -102,13 +102,12 @@ fun GameScreen(
         }
     }
 
-    LaunchedEffect(Unit) {
+    LaunchedEffect(round) {
         val fixedDelta = 1.0 / 60.0  // 60 updates per second
         val fixedDeltaNanos = (fixedDelta * 1_000_000_000L).toLong()
-
+        delay(4000)
         var previousTime = System.nanoTime()
         var lag = 0L
-
         while (true) {
             val currentTime = System.nanoTime()
             val elapsed = currentTime - previousTime

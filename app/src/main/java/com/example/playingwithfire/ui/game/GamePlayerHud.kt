@@ -300,6 +300,7 @@ fun TimerDisplay(
     val isRunning = remember(roundNumber) { mutableStateOf(true) }
 
     LaunchedEffect(key1 = isRunning.value, key2 = roundNumber) {
+        delay(4000)
         while (isRunning.value && secondsLeft > 0) {
             delay(1000L)
             secondsLeft -= 1
