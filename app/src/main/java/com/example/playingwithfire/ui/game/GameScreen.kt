@@ -86,6 +86,7 @@ fun GameScreen(
     val explosions = gameState.explosions
     val powerUps = gameState.powerUps
     val round = gameState.round
+    val winner = gameState.winner
 
     val context = LocalContext.current
     val bombBitmap = remember { ImageBitmap.imageResource(context.resources, R.drawable.bomb) }
@@ -109,6 +110,11 @@ fun GameScreen(
         var previousTime = System.nanoTime()
         var lag = 0L
         while (true) {
+            if (gameState.winner != "None") {
+                delay(16L)
+                continue
+            }
+
             val currentTime = System.nanoTime()
             val elapsed = currentTime - previousTime
             previousTime = currentTime
@@ -226,8 +232,11 @@ fun GameScreen(
                 )
             }
         }
-        GamePlayerHud(Modifier.padding(maxHeight*0.02f), players, round)
+        GamePlayerHud(Modifier.padding(maxHeight*0.02f), players, round, winner)
         GameNewRound(round)
+        if (winner != "None") {
+            GameWinner(winner)
+        }
     }
 }
 

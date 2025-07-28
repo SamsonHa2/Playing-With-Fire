@@ -13,6 +13,8 @@ class GameEngine {
     private var explosions = mutableListOf<Explosion>()
     private var powerUps = mutableListOf<PowerUp>()
     private var round = 1
+    private var winner = "None"
+
     init {
         spawnPlayer("Player 1", "Player 1", Position(1.5f,1.5f))
         spawnPlayer("Bot 1", "Bot 1", Position(15.5f,10.5f))
@@ -24,7 +26,8 @@ class GameEngine {
             bombs = bombs.toList(),
             explosions = explosions.toList(),
             powerUps = powerUps.toList(),
-            round = round
+            round = round,
+            winner = winner
         )
     }
 
@@ -52,19 +55,31 @@ class GameEngine {
         checkRoundWin()
     }
 
+    private fun checkPlayerWin(){
+        for (player in players.values){
+            if (player.wins >= 2) {
+                winner = player.id
+            }
+        }
+    }
+
     private fun checkRoundWin(){
         for (player in players.values){
             if (player.hp <= 0) {
                 val opponentId = if (player.id == "Player 1") "Bot 1" else "Player 1"
                 players[opponentId]?.apply {
                     wins += 1
-                    resetRound()
                 }
-                round += 1
+                checkPlayerWin()
+
+                if (winner == "None"){
+                    resetRound()
+                    round += 1
+                }
             }
         }
-
     }
+
     private fun updatePlayers(delta: Double) {
         for ((id, player) in players) {
             if (id == "Bot 1"){

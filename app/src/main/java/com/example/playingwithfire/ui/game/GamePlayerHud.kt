@@ -53,7 +53,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 
 @SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
-fun GamePlayerHud(modifier: Modifier = Modifier, players: List<Player>, roundNumber: Int) {
+fun GamePlayerHud(modifier: Modifier = Modifier, players: List<Player>, roundNumber: Int, winner: String) {
     BoxWithConstraints(modifier = modifier) {
         val fontScale = Resources.getSystem().configuration.fontScale
         val fontSize = ((maxHeight*0.1f).value / fontScale).sp
@@ -94,7 +94,7 @@ fun GamePlayerHud(modifier: Modifier = Modifier, players: List<Player>, roundNum
                     modifier = Modifier.weight(1.5f).height(maxHeight*0.16f).fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
-                    TimerDisplay(fontSize, maxHeight, roundNumber)
+                    TimerDisplay(fontSize, maxHeight, roundNumber, winner)
                 }
                 Column(
                     modifier = Modifier
@@ -294,6 +294,7 @@ fun TimerDisplay(
     fontSize: TextUnit,
     maxHeight: Dp,
     roundNumber: Int,
+    winner: String,
     totalTimeSeconds: Int = 99,
 ) {
     var secondsLeft by remember(roundNumber) { mutableIntStateOf(totalTimeSeconds) }
@@ -302,6 +303,10 @@ fun TimerDisplay(
     LaunchedEffect(key1 = isRunning.value, key2 = roundNumber) {
         delay(4000)
         while (isRunning.value && secondsLeft > 0) {
+            if (winner != "none") {
+                delay(100L) // Small delay to avoid tight loop
+                continue
+            }
             delay(1000L)
             secondsLeft -= 1
         }
@@ -319,5 +324,5 @@ fun TimerDisplay(
 @Preview(showBackground = true, widthDp = 732, heightDp = 412)
 @Composable
 fun GamePlayerHudPreview() {
-    GamePlayerHud(Modifier.fillMaxSize(), players = listOf(Player("1", "s", Position(0f,0f), wins = 1, hp = 55), Player("2", "as", Position(0f,0f), wins = 2)), 1)
+    GamePlayerHud(Modifier.fillMaxSize(), players = listOf(Player("1", "s", Position(0f,0f), wins = 1, hp = 55), Player("2", "as", Position(0f,0f), wins = 2)), 1, "None")
 }

@@ -54,7 +54,8 @@ fun canEscapeAfterBombPlaced(player: Player, gameState: GameState, bomb: Bomb): 
         gameState.bombs + bomb,
         gameState.explosions,
         gameState.powerUps,
-        gameState.round
+        gameState.round,
+        gameState.winner
     )
     val placedBombMap = calculateDangerZones(player, bombPlacedGameState)
     val ans = canEscape(placedBombMap, player.position)

@@ -6,5 +6,6 @@ data class GameState(
     val bombs: List<Bomb>,
     val explosions: List<Explosion>,
     val powerUps: List<PowerUp>,
-    val round: Int
+    val round: Int,
+    val winner: String
 )
