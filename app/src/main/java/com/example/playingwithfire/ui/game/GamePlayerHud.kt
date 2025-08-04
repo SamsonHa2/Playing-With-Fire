@@ -298,13 +298,12 @@ fun TimerDisplay(
     totalTimeSeconds: Int = 99,
 ) {
     var secondsLeft by remember(roundNumber) { mutableIntStateOf(totalTimeSeconds) }
-    val isRunning = remember(roundNumber) { mutableStateOf(true) }
 
-    LaunchedEffect(key1 = isRunning.value, key2 = roundNumber) {
+    LaunchedEffect(roundNumber) {
         delay(4000)
-        while (isRunning.value && secondsLeft > 0) {
-            if (winner != "none") {
-                delay(100L) // Small delay to avoid tight loop
+        while (secondsLeft > 0) {
+            if (winner != "None") {
+                delay(100L)
                 continue
             }
             delay(1000L)
@@ -312,7 +311,9 @@ fun TimerDisplay(
         }
     }
     Text(
-        modifier = Modifier.padding(top = maxHeight * 0.04f).fillMaxSize(),
+        modifier = Modifier
+            .padding(top = maxHeight * 0.04f)
+            .fillMaxSize(),
         text = "$secondsLeft",
         style = MaterialTheme.typography.headlineMedium,
         textAlign = TextAlign.Center,
