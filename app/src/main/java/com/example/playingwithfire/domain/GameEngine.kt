@@ -124,16 +124,41 @@ class GameEngine {
             val mainTile = grid[targetX, targetY]
             val diaTile = grid[diaTargetX, diaTargetY]
 
-            if (willCollide(mainTile, diaTile)) {
-                val tilePos = grid[player.position.x.toInt(), player.position.y.toInt()].position
-                movedPlayer.position = resetBlockedPosition(tilePos, player.direction, player.position, player.size / 2)
+            val mainBlocked = mainTile.type != TileType.Empty
+            val diaBlocked = diaTile.type != TileType.Empty
+
+            val tilePos = grid[player.position.x.toInt(), player.position.y.toInt()].position
+            val correctedPlayer = when {
+                mainBlocked -> {
+                    movedPlayer.copy(position = resetBlockedPosition(tilePos, player.direction, player.position, playerRadius))
+                }
+                diaBlocked -> {
+                    val biasedPlayer = player.copy()
+                    biasedPlayer.direction = checkPlayerPosBias(player)
+                    biasedPlayer.apply { move(delta) }
+                    if (biasedPlayer.direction == player.direction) {
+                        biasedPlayer.position = resetBlockedPosition(tilePos, player.direction, player.position, playerRadius)
+                    }
+                    biasedPlayer.copy()
+                }
+                else -> movedPlayer
             }
 
-            handleExplosionCollision(movedPlayer, mainTile.position, diaTile.position)
-
-            val finalPlayer = collectPowerUp(movedPlayer, mainTile.position, diaTile.position).copy()
+            val afterExplosion = handleExplosionCollision(correctedPlayer, mainTile.position, diaTile.position)
+            val finalPlayer = collectPowerUp(afterExplosion, mainTile.position, diaTile.position).copy()
 
             updatePlayer(id, finalPlayer)
+        }
+    }
+
+    private fun checkPlayerPosBias(player: Player): Direction {
+        val isMovingVertically = player.direction == Direction.UP || player.direction == Direction.DOWN
+        val axisDecimal = if (isMovingVertically) player.position.x % 1f else player.position.y % 1f
+
+        return when {
+            axisDecimal < 0.45f -> if (isMovingVertically) Direction.RIGHT else Direction.DOWN
+            axisDecimal > 0.55f -> if (isMovingVertically) Direction.LEFT else Direction.UP
+            else -> player.direction
         }
     }
 
@@ -192,10 +217,6 @@ class GameEngine {
                 iterator.remove()
             }
         }
-    }
-
-    private fun willCollide(mainTile: Tile, diaTile: Tile): Boolean {
-        return mainTile.type != TileType.Empty || diaTile.type != TileType.Empty
     }
 
     private fun handleExplosionCollision(player: Player, mainTilePos: Position, diaTilePos: Position): Player{
