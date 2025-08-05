@@ -36,10 +36,6 @@ data class Player(
         val newX = position.x + dx * distance
         val newY = position.y + dy * distance
 
-        setPosition(newX, newY)
-    }
-
-    private fun setPosition(x: Float, y: Float){
-        this.position = Position(x, y)
+        this.position = Position(newX, newY)
     }
 }

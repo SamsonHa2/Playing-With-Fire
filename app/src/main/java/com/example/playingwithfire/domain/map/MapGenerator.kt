@@ -30,7 +30,8 @@ object MapGenerator {
             Position(width - 1.5f, height - 1.5f), Position(width - 2.5f, height - 1.5f), Position(width - 3.5f, height - 1.5f), Position(width - 1.5f, height - 2.5f), Position(width - 1.5f, height - 3.5f) // Bottom-right
         )
 
-        val candidateTiles = grid.allTiles()
+        val candidateTiles = grid.tiles
+            .flatten()
             .filter { it.position !in reserved && it.type == TileType.Empty }
             .shuffled()
 

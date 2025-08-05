@@ -8,10 +8,4 @@ class Grid(val width: Int, val height: Int) {
     }
 
     operator fun get(x: Int, y: Int): Tile = tiles[y][x]
-
-    operator fun set(x: Int, y: Int, type: TileType) {
-        tiles[y][x].type = type
-    }
-
-    fun allTiles(): List<Tile> = tiles.flatten()
 }

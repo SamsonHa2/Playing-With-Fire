@@ -1,6 +1,5 @@
 package com.example.playingwithfire.ui.game
 
-import android.annotation.SuppressLint
 import android.content.res.Resources
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
@@ -26,7 +25,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -51,7 +49,6 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 
-@SuppressLint("UnusedBoxWithConstraintsScope")
 @Composable
 fun GamePlayerHud(modifier: Modifier = Modifier, players: List<Player>, roundNumber: Int, winner: String) {
     BoxWithConstraints(modifier = modifier) {
@@ -90,7 +87,7 @@ fun GamePlayerHud(modifier: Modifier = Modifier, players: List<Player>, roundNum
                         modifier = Modifier.fillMaxHeight(0.0275f),
                     )
                 }
-                BoxWithConstraints(
+                Box(
                     modifier = Modifier.weight(1.5f).height(maxHeight*0.16f).fillMaxWidth(),
                     contentAlignment = Alignment.Center
                 ) {
@@ -221,7 +218,7 @@ fun PowerUpBar(modifier: Modifier = Modifier) {
         val maxHeight = maxHeight
         val maxWidth = maxWidth
         val endPadding = maxHeight * 0.7f
-        Row(){
+        Row{
             TaperedGradientBar(
                 modifier = Modifier.padding(end = endPadding),
                 gradientColors = listOf(Color.Green, Color.Yellow),
